@@ -8,8 +8,9 @@ import {
   ReactiveFormsModule,
   FormControl,
 } from '@angular/forms';
-import { SuperHero } from '../../models/superhero.model';
+import { SuperHero } from '../../../models/superhero.model';
 import { Observable } from 'rxjs';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-add-data',
@@ -29,41 +30,55 @@ export class AddDataComponent {
 
   superhero$ = this.getSuperHero();
 
+  private getSuperHero(): Observable<SuperHero[]> {
+    return this.http.get<SuperHero[]>('https://localhost:7139/api/SuperHero');
+  }
   onFormSubmit() {
     if (this.superForm.invalid) {
-      alert('Please fill out all required fields.');
+      Swal.fire({
+        icon: 'error',
+        title: 'Oops...',
+        text: 'Please fill out all required fields.',
+      });
       return;
     }
 
-    const addEmployee = {
+    const addSuperHero = {
       name: this.superForm.value.name,
       firstName: this.superForm.value.firstName,
       lastName: this.superForm.value.lastName,
       place: this.superForm.value.place,
     };
+
     this.http
-      .post('https://localhost:7139/api/SuperHero', addEmployee)
+      .post('https://localhost:7139/api/SuperHero', addSuperHero)
       .subscribe({
         next: (value) => {
-          // console.log(value);
-          alert('Added Successfuly');
+          Swal.fire({
+            title: 'Added successfully!',
+            icon: 'success',
+            draggable: true,
+          });
+
           this.superhero$ = this.getSuperHero();
           this.superForm.reset();
           this.closeModal();
         },
-        error: (err) => console.error('Error adding data', err),
+        error: (err) => {
+          console.error('Error adding data', err);
+          Swal.fire({
+            title: 'Error adding data',
+            icon: 'error',
+            text: err.message || 'Something went wrong.',
+          });
+        },
       });
   }
 
-  // close modal after submit
   closeModal() {
     const modal = document.getElementById('hi');
     if (modal) {
       modal.click();
     }
-  }
-
-  private getSuperHero(): Observable<SuperHero[]> {
-    return this.http.get<SuperHero[]>('https://localhost:7139/api/SuperHero');
   }
 }
